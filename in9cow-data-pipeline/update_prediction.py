@@ -107,12 +107,12 @@ def main():
                         """, (location_id, day_kor, hour, predicted, predicted))
                         conn.commit()
 
-                        log = f"[{datetime.now()}] ✅ Updated: loc={location_id}, day={day_kor}, hour={hour}, value={predicted}\n"
+                        log = f"[{datetime.now()}] [OK] Updated: loc={location_id}, day={day_kor}, hour={hour}, value={predicted}\n"
                     else:
-                        log = f"[{datetime.now()}] ❗예측 실패 (숫자 없음): loc={location_id}, hour={hour}, GPT 응답: {raw_text}\n"
+                        log = f"[{datetime.now()}] [SKIP] 예측 실패 (숫자 없음): loc={location_id}, hour={hour}, GPT 응답: {raw_text}\n"
 
                 except Exception as e:
-                    log = f"[{datetime.now()}] ⚠️ GPT 오류: loc={location_id}, hour={hour}, error={e}\n"
+                    log = f"[{datetime.now()}] [ERROR] GPT 오류: loc={location_id}, hour={hour}, error={e}\n"
 
                 # 로그 파일에 기록
                 with open("/home/ec2-user/update.log", "a") as f:

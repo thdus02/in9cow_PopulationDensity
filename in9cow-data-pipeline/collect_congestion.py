@@ -10,7 +10,7 @@ from datetime import datetime
 import pytz
 import pymysql
 
-# ✅ 앱 키 2개 (홀수 시간: 키1 / 짝수 시간: 키2)
+# 앱 키 2개 (홀수 시간: 키1 / 짝수 시간: 키2)
 API_KEYS = [
     os.environ["TMAP_APP_KEY_1"],
     os.environ["TMAP_APP_KEY_2"],
@@ -18,29 +18,29 @@ API_KEYS = [
 
 API_URL = 'https://apis.openapi.sk.com/tmap/traffic'
 
-# ✅ RDS 연결 정보
+# RDS 연결 정보
 DB_HOST = os.environ["DB_HOST"]
 DB_USER = os.environ["DB_USER"]
 DB_PASSWORD = os.environ["DB_PASSWORD"]
 DB_NAME = 'in9cow'
 
-# ✅ 현재 시간 (한국 기준)
+# 현재 시간 (한국 기준)
 kst = pytz.timezone('Asia/Seoul')
 now_kst = datetime.now(kst)
 timestamp = now_kst.strftime('%Y-%m-%d %H:%M:%S')
 
-# ✅ 홀/짝 시간에 따라 앱키 선택
+# 홀/짝 시간에 따라 앱키 선택
 def select_api_key(hour):
     return API_KEYS[0] if hour % 2 == 1 else API_KEYS[1]
 
 API_KEY = select_api_key(now_kst.hour)
-print(f"🕐 현재 시각: {now_kst.hour}시 → 사용 앱키: {API_KEY[:6]}...")
+print(f"[INFO] {now_kst.hour}시 실행, 앱키 {API_KEY[:6]}... 사용")
 
-# ✅ 좌표 JSON 불러오기
+# 좌표 JSON 불러오기
 with open('place_coordinates.json', 'r', encoding='utf-8') as f:
     place_coords = json.load(f)
 
-# ✅ DB 연결
+# DB 연결
 conn = pymysql.connect(
     host=DB_HOST,
     user=DB_USER,
@@ -50,7 +50,7 @@ conn = pymysql.connect(
 )
 cursor = conn.cursor()
 
-# ✅ API 호출 함수
+# API 호출 함수
 def call_api(lat, lon):
     params = {
         'version': '1',
@@ -67,11 +67,11 @@ def call_api(lat, lon):
     response = requests.get(API_URL, headers=headers, params=params, timeout=3)
     return response.json()
 
-# ✅ 로그 기록 (cron 실행 확인용)
+# 로그 기록 (cron 실행 확인용)
 with open("/home/ec2-user/app_debug.log", "a") as f:
-    f.write("✅ cron 실행됨 at {}\n".format(datetime.now(kst)))
+    f.write("[CRON] 실행됨 at {}\n".format(datetime.now(kst)))
 
-# ✅ 각 장소별 혼잡도 수집 및 DB 저장
+# 각 장소별 혼잡도 수집 및 DB 저장
 for name, coord in place_coords.items():
     lat = coord['lat']
     lon = coord['lon']
@@ -94,16 +94,16 @@ for name, coord in place_coords.items():
             FROM Locations WHERE location_name = %s
         """
         cursor.execute(sql, (congestion, speed, timestamp, name))
-        print(f"✅ 저장 완료: {name} / 혼잡도={congestion}, 속도={speed}")
+        print(f"[OK] {name} / 혼잡도={congestion}, 속도={speed}")
 
     except Exception as e:
-        print(f"❌ 오류 ({name}): {e}")
+        print(f"[ERROR] {name}: {e}")
 
     time.sleep(0.2)
 
-# ✅ DB 종료
+# DB 종료
 conn.commit()
 cursor.close()
 conn.close()
 
-print("✅ 전체 완료: RDS 저장까지 마무리했습니다.")
+print("[DONE] 전체 장소 수집 및 저장 완료")
