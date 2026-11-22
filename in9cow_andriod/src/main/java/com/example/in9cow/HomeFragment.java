@@ -44,7 +44,7 @@ public class HomeFragment extends Fragment {
 
         FrameLayout mapContainer = view.findViewById(R.id.map_view);
         tMapView = new TMapView(requireContext());
-        tMapView.setSKTMapApiKey("dpxb5t3iRs1o66ZL4jnrF53G76E2UFsL5hG9fqm3");
+        tMapView.setSKTMapApiKey("YOUR_TMAP_API_KEY");
         mapContainer.addView(tMapView);
 
         apiService = RetrofitClient.getInstance().create(ApiService.class);
